@@ -49,7 +49,10 @@ def calcFingerprint(mols: pd.DataFrame) -> pd.DataFrame:
 
 def calcProp(mols: pd.DataFrame) -> pd.DataFrame:
     from rdkit.ML.Descriptors import MoleculeDescriptors
-    calc = MoleculeDescriptors.MolecularDescriptorCalculator([x[0] for x in rdkit.Chem.Descriptors._descList])
+
+    des_name = [x[0] for x in rdkit.Chem.Descriptors._descList if (x[0].find("PartialCharge") == -1 and x[0].find("BCUT2D")==-1 and x[0].find("Morgan") == -1)]
+    #print(des_name)  
+    calc = MoleculeDescriptors.MolecularDescriptorCalculator(des_name)
     mols["prop"] = mols["ROMol"].apply(lambda x:calc.CalcDescriptors(x))
     return mols
 
@@ -98,9 +101,18 @@ def getBestModel(X_train, y_train, X_test, y_test):
 
 def getBestfeatures(X,y):
     from sklearn.feature_selection import SelectKBest, mutual_info_classif
-    X_new = SelectKBest(mutual_info_classif, k=10).fit_transform(X, y)
+    X_new = SelectKBest(mutual_info_classif, k=20).fit_transform(X, y)
     print(X_new.shape)
     return X_new
+
+def getBestFeatureSFS(X,y):
+    from sklearn.feature_selection import SequentialFeatureSelector
+    from sklearn.ensemble import RandomForestClassifier
+    sfs_fwd = SequentialFeatureSelector(RandomForestClassifier(), n_features_to_select=10, direction='forward').fit(X, y)
+    X_new = sfs_fwd.transform(X)
+    print(X_new.shape)
+    return X_new
+
 
 X_fp = calcFingerprint(dataMol)
 X = X_fp["MolFP"].to_list()
@@ -111,15 +123,20 @@ getBestModel(X_train, y_train, X_test, y_test)
 X_new = getBestfeatures(X, y)
 X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size=0.3, random_state=42)   
 getBestModel(X_train, y_train, X_test, y_test)
+X_new = getBestFeatureSFS(X, y)
+X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size=0.3, random_state=42)   
+getBestModel(X_train, y_train, X_test, y_test)
 
-
-
-
-
-""" X_prop = calcProp(dataMol)
+X_prop = calcProp(dataMol)
 X = X_prop["prop"].to_list()
 y = dataMol['activity'].to_list()
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)   
 getBestModel(X_train, y_train, X_test, y_test)
-X_new = getBestfeatures(X, y) """
+X_new = getBestfeatures(X, y)
+X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size=0.3, random_state=42)
+getBestModel(X_train, y_train, X_test, y_test)
+X_new = getBestFeatureSFS(X, y)
+X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size=0.3, random_state=42)   
+getBestModel(X_train, y_train, X_test, y_test)
+
