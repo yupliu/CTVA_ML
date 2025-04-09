@@ -101,7 +101,7 @@ def getBestModel(X_train, y_train, X_test, y_test):
 
 def getBestfeatures(X,y):
     from sklearn.feature_selection import SelectKBest, mutual_info_classif
-    X_new = SelectKBest(mutual_info_classif, k=50).fit_transform(X, y)
+    X_new = SelectKBest(mutual_info_classif, k=55).fit_transform(X, y)
     print(X_new.shape)
     return X_new
 
