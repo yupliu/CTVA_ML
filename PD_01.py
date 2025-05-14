@@ -32,7 +32,7 @@ def genModel(input_shape):
     model.add(layers.Dense(10, activation="softmax"))
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     return model
-
+ 
 input_shape = (28,28,1)
 x_train = np.expand_dims(x_train,-1)
 x_test = np.expand_dims(x_test,-1) 
